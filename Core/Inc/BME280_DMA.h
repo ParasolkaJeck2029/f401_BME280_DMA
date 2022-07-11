@@ -20,6 +20,10 @@
 #define LED_OFF HAL_GPIO_WritePin(LED_GPIO_PORT, LED_PIN, GPIO_PIN_SET)
 #define LED_TGL HAL_GPIO_TogglePin(LED_GPIO_PORT, LED_PIN)
 
+#define be16toword(a) ((((a)>>8)&0xff)|(((a)<<8)&0xff00))
+#define be24toword(a) ((((a)>>16)&0x000000ff)|((a)&0x0000ff00)|(((a)<<16)&0x00ff0000))
+
+
 #define BME280_I2C_HANDLER hi2c1
 
 #ifndef BME280_ADDR
@@ -112,9 +116,17 @@ typedef struct
 }BME280_Calibrate_parametrs;
 
 uint8_t I2Cx_ReadData_DMA(uint16_t Addr, uint16_t reg, uint8_t *result);
+void I2Cx_ReadData16_DMA(uint16_t Addr, uint8_t Reg, uint16_t *Value);
+void I2Cx_ReadData24_DMA(uint16_t Addr, uint8_t Reg, uint32_t *Value);
+
 void I2Cx_WriteData_DMA(uint16_t Addr, uint16_t reg, uint8_t *value);
 
 void BME280_ReadReg(uint16_t Reg, uint8_t *result);
+void BME280_ReadReg_S16(uint8_t Reg, int16_t *Value);
+void BME280_ReadReg_S24(uint8_t Reg, int32_t *Value);
+void BME280_ReadReg_U16(uint8_t Reg, uint16_t *Value);
+void BME280_ReadReg_U24(uint8_t Reg, uint32_t *Value);
+
 void BME280_WriteReg(uint16_t Reg, uint8_t * value);
 
 void Error();

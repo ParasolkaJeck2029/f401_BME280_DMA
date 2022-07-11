@@ -22,6 +22,18 @@ uint8_t I2Cx_ReadData_DMA(uint16_t Addr, uint16_t reg, uint8_t *result){
 	if(res != HAL_OK){Error();}
 	return res;
 }
+void I2Cx_ReadData16_DMA(uint16_t Addr, uint8_t Reg, uint16_t *Value)
+{
+	HAL_StatusTypeDef status = HAL_OK;
+	status = HAL_I2C_Mem_Read_DMA(&BME280_I2C_HANDLER, Addr, Reg, I2C_MEMADD_SIZE_8BIT, (uint8_t *)Value, 2);
+	if (status != HAL_OK) Error();
+}
+void I2Cx_ReadData24_DMA(uint16_t Addr, uint8_t Reg, uint32_t *Value)
+{
+	HAL_StatusTypeDef status = HAL_OK;
+	status = HAL_I2C_Mem_Read_DMA(&BME280_I2C_HANDLER, Addr, Reg, I2C_MEMADD_SIZE_8BIT, (uint8_t *)Value, 3);
+	if (status != HAL_OK) Error();
+}
 
 void I2Cx_WriteData_DMA(uint16_t Addr, uint16_t reg, uint8_t *value){
 	HAL_I2C_Mem_Write_DMA(&hi2c1, Addr, reg, I2C_MEMADD_SIZE_8BIT, value, 1);
@@ -31,6 +43,26 @@ void BME280_ReadReg(uint16_t Reg, uint8_t *result){
 	I2Cx_ReadData_DMA(BME280_ADDR, Reg, result);
 }
 
+//==========Reading of diferent registers in BME280===========
+void BME280_ReadReg_S16(uint8_t Reg, int16_t *Value){
+	I2Cx_ReadData16_DMA(BME280_ADDR,Reg, (uint16_t*) Value);
+}
+void BME280_ReadReg_S24(uint8_t Reg, int32_t *Value){
+	I2Cx_ReadData24_DMA(BME280_ADDR,Reg, (uint32_t*) Value);
+	*(int32_t *) Value &= 0x00FFFFFF;
+}
+void BME280_ReadReg_U16(uint8_t Reg, uint16_t *Value){
+	I2Cx_ReadData16_DMA(BME280_ADDR,Reg, Value);
+}
+void BME280_ReadReg_U24(uint8_t Reg, uint32_t *Value){
+	I2Cx_ReadData24_DMA(BME280_ADDR,Reg,  Value);
+	*(uint32_t *) Value &= 0x00FFFFFF;
+}
+void BME280_ReadReg_BE_U24(uint8_t Reg, uint32_t *Value)
+{
+  I2Cx_ReadData24_DMA(BME280_ADDR,Reg,Value);
+  *(uint32_t *) Value = be24toword(*(uint32_t *) Value) & 0x00FFFFFF;
+}
 void BME280_WriteReg(uint16_t Reg, uint8_t * value){
 	I2Cx_WriteData_DMA(BME280_ADDR, Reg, value);
 }
