@@ -112,5 +112,11 @@ typedef struct
 }BME280_Calibrate_parametrs;
 
 uint8_t I2Cx_ReadData_DMA(uint16_t Addr, uint16_t reg, uint8_t *result);
+
+void BME280_ReadReg(uint16_t Reg, uint8_t *result);
+
 void Error();
+
+void BME280_GetId(uint8_t * id);
+
 #endif /* INC_BME280_DMA_H_ */

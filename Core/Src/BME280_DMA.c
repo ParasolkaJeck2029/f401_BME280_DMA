@@ -16,6 +16,14 @@ uint8_t I2Cx_ReadData_DMA(uint16_t Addr, uint16_t reg, uint8_t *result){
 	return res;
 }
 
+void BME280_ReadReg(uint16_t Reg, uint8_t *result){
+	I2Cx_ReadData_DMA(BME280_ADDR, Reg, result);
+}
+
+void BME280_GetId(uint8_t * id){
+	BME280_ReadReg(REG_ID, id);
+}
+
 void Error(){
 	LED_OFF;
 }

@@ -107,8 +107,8 @@ int main(void)
   printf("stm init\n\r\n\r");
 
   uint8_t id;
-  I2Cx_ReadData_DMA(BME280_ADDR, REG_ID, &id);
-  HAL_Delay(10);
+  BME280_GetId(&id);
+  HAL_Delay(1);
   sprintf(uart_string, "ID: 0x%x\r\n", id);
   HAL_UART_Transmit_DMA(&huart1, uart_string, strlen(uart_string));
   while (1)
