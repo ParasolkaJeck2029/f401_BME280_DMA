@@ -50,14 +50,20 @@ void BME280_Init(){
 	}
 	}
 	BME280_SetOversampling(BME280_OVERSAMPLING_X4, BME280_OVERSAMPLING_X4, BME280_OVERSAMPLING_X4, BME280_MODE_NORMAL);
-	sprintf(uart_string, "Init ok\r\nID: 0x%x\r\n", id);
+	uint8_t status;
+	BME280_GetStatus(&status);
+	sprintf(uart_string, "Init ok\r\nID: 0x%x\r\nStatus: 0x%x\r\n", id, status);
 	HAL_UART_Transmit_DMA(&huart1, uart_string, strlen(uart_string));
 }
 
 void BME280_GetId(uint8_t * id){
 	BME280_ReadReg(REG_ID, id);
 }
-
+void BME280_GetStatus(uint8_t *result)
+{
+	//Reading status of sensor, see #define STATUS...
+	BME280_ReadReg(REG_STATUS, result);
+}
 void BME280_SetOversampling(uint8_t oversampling_temp, uint8_t oversampling_pres, uint8_t oversampling_hum, uint8_t mode){
 	switch(oversampling_temp){
 	case BME280_OVERSAMPLING_X1:break;
