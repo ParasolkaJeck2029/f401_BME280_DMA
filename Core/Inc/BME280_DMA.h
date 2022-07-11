@@ -1,25 +1,24 @@
 /*
- * BME280.h
+ * BME280_DMA.h
  *
- *  Created on: Jul 5, 2022
+ *  Created on: Jul 11, 2022
  *      Author: ParasolkaJeck
  */
 
-#ifndef INC_BME280_H_
-#define INC_BME280_H_
+#ifndef INC_BME280_DMA_H_
+#define INC_BME280_DMA_H_
+
 #include "stm32f4xx_hal.h"
 #include "main.h"
 #include <string.h>
 #include <math.h>
 #include <stdio.h>
+
 #define LED_GPIO_PORT GPIOC
 #define LED_PIN GPIO_PIN_13
 #define LED_ON HAL_GPIO_WritePin(LED_GPIO_PORT, LED_PIN, GPIO_PIN_RESET)
 #define LED_OFF HAL_GPIO_WritePin(LED_GPIO_PORT, LED_PIN, GPIO_PIN_SET)
 #define LED_TGL HAL_GPIO_TogglePin(LED_GPIO_PORT, LED_PIN)
-
-#define be16toword(a) ((((a)>>8)&0xff)|(((a)<<8)&0xff00))
-#define be24toword(a) ((((a)>>16)&0x000000ff)|((a)&0x0000ff00)|(((a)<<16)&0x00ff0000))
 
 #define BME280_I2C_HANDLER hi2c1
 
@@ -112,49 +111,6 @@ typedef struct
 	char H6;
 }BME280_Calibrate_parametrs;
 
-
-
-uint8_t BME280_Init();
-
+uint8_t I2Cx_ReadData_DMA(uint16_t Addr, uint16_t reg, uint8_t *result);
 void Error();
-
-uint8_t I2Cx_ReadData(uint16_t Addr, uint8_t Reg);
-void I2Cx_ReadData16(uint16_t Addr, uint8_t Reg, uint16_t *Value);
-void I2Cx_ReadData24(uint16_t Addr, uint8_t Reg, uint32_t *Value);
-
-void BME280_ReadReg_S16(uint8_t Reg, int16_t *Value);
-void BME280_ReadReg_S24(uint8_t Reg, int32_t *Value);
-void BME280_ReadReg_U16(uint8_t Reg, uint16_t *Value);
-void BME280_ReadReg_U24(uint8_t Reg, uint32_t *Value);
-
-uint8_t BME280_ReadReg(uint8_t Reg);
-
-void I2Cx_WriteData(uint16_t Addr, uint8_t Reg, uint8_t Value);
-void I2Cx_WriteReg(uint8_t Reg, uint8_t Value);
-uint8_t BME280_GetID(void);
-uint8_t BME280_GetStatus();
-float BME280_GetTemperature();
-float BME280_GetPressure();
-int32_t BME280_ReadPressureRAW();
-int32_t BME280_ReadTemperatureRAW();
-int16_t BME280_ReadHumidityRAW();
-float BME280_GetHumidity();
-void BME280_SoftReset();
-void BME280_ReadReg_BE_U24(uint8_t Reg, uint32_t *Value);
-void BME280_ReadCalibration();
-
-void BME280_SetOversamplingHum(uint8_t oversampling_hum);
-void BME280_SetOversamplingTemp(uint8_t oversampling_temp);
-void BME280_SetOversamplingPress(uint8_t oversampling_pres);
-void BME280_SetMode(uint8_t mode);
-
-uint8_t BME280_SetOversampling(uint8_t oversampling_temp, uint8_t oversampling_pres, uint8_t oversampling_hum, uint8_t mode);
-uint8_t BME280_GetOversamplingMode(uint8_t *array);
-
-uint8_t BME280_SetConfig(uint8_t standby_time, uint8_t filter_coeficient, uint8_t spi_3wire_mode);
-
-void BME280_SetStandbyTime(uint8_t standby_time);
-void BME280_SetFilter(uint8_t filter_coeficient);
-void BME280_SPI_3Wire(uint8_t state);
-void BME280_GetConfig(uint8_t *array);
-#endif /* INC_BME280_H_ */
+#endif /* INC_BME280_DMA_H_ */

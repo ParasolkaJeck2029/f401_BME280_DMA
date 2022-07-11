@@ -21,7 +21,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
+#include "UART_config.h"
+#include "BME280_DMA.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -44,7 +46,8 @@ DMA_HandleTypeDef hdma_i2c1_tx;
 DMA_HandleTypeDef hdma_i2c1_rx;
 
 UART_HandleTypeDef huart1;
-
+DMA_HandleTypeDef hdma_usart1_tx;
+char uart_string[100];
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -101,6 +104,13 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  printf("stm init\n\r\n\r");
+
+  uint8_t id;
+  I2Cx_ReadData_DMA(BME280_ADDR, REG_ID, &id);
+  HAL_Delay(10);
+  sprintf(uart_string, "ID: 0x%x\r\n", id);
+  HAL_UART_Transmit_DMA(&huart1, uart_string, strlen(uart_string));
   while (1)
   {
     /* USER CODE END WHILE */
@@ -231,6 +241,7 @@ static void MX_DMA_Init(void)
 
   /* DMA controller clock enable */
   __HAL_RCC_DMA1_CLK_ENABLE();
+  __HAL_RCC_DMA2_CLK_ENABLE();
 
   /* DMA interrupt init */
   /* DMA1_Stream0_IRQn interrupt configuration */
@@ -239,6 +250,9 @@ static void MX_DMA_Init(void)
   /* DMA1_Stream6_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Stream6_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Stream6_IRQn);
+  /* DMA2_Stream7_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream7_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream7_IRQn);
 
 }
 
