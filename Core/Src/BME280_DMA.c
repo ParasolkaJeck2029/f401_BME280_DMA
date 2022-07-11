@@ -12,6 +12,10 @@ extern char uart_string[100];
 extern DMA_HandleTypeDef hdma_i2c1_tx;
 extern DMA_HandleTypeDef hdma_i2c1_rx;
 
+BME280_Calibrate_parametrs BME280_Cal_par;
+
+int32_t temp_int;
+
 void Error(){
 	LED_OFF;
 }
@@ -81,7 +85,9 @@ void BME280_Init(){
 		return;
 	}
 	}
+	BME280_ReadCalibration();
 	BME280_SetOversampling(BME280_OVERSAMPLING_X4, BME280_OVERSAMPLING_X4, BME280_OVERSAMPLING_X4, BME280_MODE_NORMAL);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
 	uint8_t status;
 	BME280_GetStatus(&status);
 	sprintf(uart_string, "Init ok\r\nID: 0x%x\r\nStatus: 0x%x\r\n", id, status);
@@ -133,4 +139,63 @@ void BME280_SetOversampling(uint8_t oversampling_temp, uint8_t oversampling_pres
 	BME280_WriteReg(REG_CTRL_MEAS, &reg_cntl_meas_value);
 }
 
+void BME280_ReadHumidityRAW(int16_t * result){
+	BME280_ReadReg_S16(REG_HUM, result);
+	*result = be16toword(*result);
+}
+void BME280_ReadTemperatureRAW(int32_t * result){ //read raw data of ADC sensor and turns over
+	BME280_ReadReg_U24(REG_TEMP, result);
+	*result = be24toword(*result);
+}
+void BME280_ReadPressureRAW(int32_t * result){//read raw data of ADC sensor and turns over
+	BME280_ReadReg_U24(REG_HUM, (uint32_t *)result);
+	*result = be24toword(*result);
+}
 
+void BME280_ReadCalibration(){
+	//function read calibration_data from sensor, needed for correct measuring of all parameters
+	BME280_ReadReg_U16(CALIBRATION_T1, & BME280_Cal_par.T1);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	BME280_ReadReg_S16(CALIBRATION_T2, & BME280_Cal_par.T2);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	BME280_ReadReg_S16(CALIBRATION_T3, & BME280_Cal_par.T3);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	BME280_ReadReg_U16(CALIBRATION_P1, & BME280_Cal_par.P1);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	BME280_ReadReg_S16(CALIBRATION_P2, & BME280_Cal_par.P2);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	BME280_ReadReg_S16(CALIBRATION_P3, & BME280_Cal_par.P3);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	BME280_ReadReg_S16(CALIBRATION_P4, & BME280_Cal_par.P4);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	BME280_ReadReg_S16(CALIBRATION_P5, & BME280_Cal_par.P5);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	BME280_ReadReg_S16(CALIBRATION_P6, & BME280_Cal_par.P6);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	BME280_ReadReg_S16(CALIBRATION_P7, & BME280_Cal_par.P7);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	BME280_ReadReg_S16(CALIBRATION_P8, & BME280_Cal_par.P8);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	BME280_ReadReg_S16(CALIBRATION_P9, & BME280_Cal_par.P9);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	BME280_ReadReg(CALIBRATION_H1, &BME280_Cal_par.H1);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	BME280_ReadReg_S16(CALIBRATION_H2, & BME280_Cal_par.H2);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	BME280_ReadReg(CALIBRATION_H3, &BME280_Cal_par.H3);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	BME280_ReadReg_S16(CALIBRATION_H4, & BME280_Cal_par.H4);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	BME280_ReadReg_S16(CALIBRATION_H5, & BME280_Cal_par.H5);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	BME280_ReadReg(CALIBRATION_H6, &BME280_Cal_par.H6);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	/*uncoment for check all calibration value
+	sprintf(uart_string, "Printing calibration parameters:\n\rT1: %d\n\rT2: %d\n\rT3: %d\n\r", BME280_Cal_par.T1, BME280_Cal_par.T2, BME280_Cal_par.T3);
+	HAL_UART_Transmit_DMA(&huart1, uart_string, strlen(uart_string));
+	sprintf(uart_string, "P1: %d\n\rP2: %d\n\rP3: %d\n\rP4: %d\n\rP5: %d\n\rP6: %d\n\rP7: %d\n\rP8: %d\n\rP9: %d\n\r", BME280_Cal_par.P1, BME280_Cal_par.P2, BME280_Cal_par.P3, BME280_Cal_par.P4, BME280_Cal_par.P5, BME280_Cal_par.P6, BME280_Cal_par.P7, BME280_Cal_par.P8, BME280_Cal_par.P9);
+	HAL_UART_Transmit_DMA(&huart1, uart_string, strlen(uart_string));
+	sprintf(uart_string, "H1: %d\n\rH2: %d\n\rH3: %d\n\rH4: %d\n\rH5: %d\n\rH6: %d\n\r", BME280_Cal_par.H1, BME280_Cal_par.H2, BME280_Cal_par.H3, BME280_Cal_par.H4, BME280_Cal_par.H6);
+	HAL_UART_Transmit_DMA(&huart1, uart_string, strlen(uart_string));
+*/
+}

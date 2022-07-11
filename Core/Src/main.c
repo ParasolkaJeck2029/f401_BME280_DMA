@@ -48,6 +48,7 @@ DMA_HandleTypeDef hdma_i2c1_rx;
 UART_HandleTypeDef huart1;
 DMA_HandleTypeDef hdma_usart1_tx;
 char uart_string[100];
+extern BME280_Calibrate_parametrs BME280_Cal_par;
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -107,7 +108,9 @@ int main(void)
   printf("stm init\n\r\n\r");
 
   BME280_Init();
-
+  HAL_Delay(10);
+  sprintf(uart_string, "Temperature calibration\r\n T1: %d\r\nT2: %d\r\nT3: %d\r\n\r\n", BME280_Cal_par.T1, BME280_Cal_par.T2, BME280_Cal_par.T3);
+  HAL_UART_Transmit(&huart1, uart_string, strlen(uart_string), 100);
   while (1)
   {
     /* USER CODE END WHILE */
