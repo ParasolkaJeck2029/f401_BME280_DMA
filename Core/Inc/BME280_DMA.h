@@ -112,11 +112,15 @@ typedef struct
 }BME280_Calibrate_parametrs;
 
 uint8_t I2Cx_ReadData_DMA(uint16_t Addr, uint16_t reg, uint8_t *result);
+void I2Cx_WriteData_DMA(uint16_t Addr, uint16_t reg, uint8_t *value);
 
 void BME280_ReadReg(uint16_t Reg, uint8_t *result);
+void BME280_WriteReg(uint16_t Reg, uint8_t * value);
 
 void Error();
 
 void BME280_GetId(uint8_t * id);
 
+void BME280_Init();
+void BME280_SetOversampling(uint8_t oversampling_temp, uint8_t oversampling_pres, uint8_t oversampling_hum, uint8_t mode);
 #endif /* INC_BME280_DMA_H_ */

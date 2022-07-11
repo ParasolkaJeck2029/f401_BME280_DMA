@@ -106,11 +106,8 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   printf("stm init\n\r\n\r");
 
-  uint8_t id;
-  BME280_GetId(&id);
-  HAL_Delay(1);
-  sprintf(uart_string, "ID: 0x%x\r\n", id);
-  HAL_UART_Transmit_DMA(&huart1, uart_string, strlen(uart_string));
+  BME280_Init();
+
   while (1)
   {
     /* USER CODE END WHILE */
