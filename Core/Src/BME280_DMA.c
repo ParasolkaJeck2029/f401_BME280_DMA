@@ -142,6 +142,7 @@ void BME280_SetOversampling(uint8_t oversampling_temp, uint8_t oversampling_pres
 	uint8_t reg_cntl_meas_value;
 	reg_cntl_meas_value = ((oversampling_temp)<<5)|((oversampling_pres)<<2)|(mode);
 	while(HAL_DMA_GetState(&hdma_i2c1_tx) != HAL_DMA_STATE_READY);
+	printf("cntr meas: %d\r\n", reg_cntl_meas_value);
 	BME280_WriteReg(REG_CTRL_MEAS, &reg_cntl_meas_value);
 	while(HAL_DMA_GetState(&hdma_i2c1_tx) != HAL_DMA_STATE_READY);
 
@@ -172,6 +173,7 @@ void BME280_ReadHumidityRAW(int16_t * result){
 }
 void BME280_ReadTemperatureRAW(int32_t * result){ //read raw data of ADC sensor and turns over
 	BME280_ReadReg_U24(REG_TEMP, result);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
 	*result = be24toword(*result);
 }
 void BME280_ReadPressureRAW(int32_t * result){//read raw data of ADC sensor and turns over
@@ -225,5 +227,22 @@ void BME280_ReadCalibration(){
 	sprintf(uart_string, "H1: %d\n\rH2: %d\n\rH3: %d\n\rH4: %d\n\rH5: %d\n\rH6: %d\n\r", BME280_Cal_par.H1, BME280_Cal_par.H2, BME280_Cal_par.H3, BME280_Cal_par.H4, BME280_Cal_par.H6);
 	HAL_UART_Transmit_DMA(&huart1, uart_string, strlen(uart_string));
 */
+}
+
+float BME280_GetTemperature(){
+	//return current temperature in float
+	float temp = 0;
+	int32_t temp_raw;
+	int32_t var1;
+	int32_t var2;
+	BME280_ReadTemperatureRAW(&temp_raw);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	temp_raw >>= 4;
+	var1 = ((((temp_raw>>3) - ((int32_t)BME280_Cal_par.T1 <<1))) *	((int32_t)BME280_Cal_par.T2)) >> 11;
+	var2 = (((((temp_raw>>4) - ((int32_t)BME280_Cal_par.T1)) *	((temp_raw>>4) - ((int32_t)BME280_Cal_par.T1))) >> 12) *((int32_t)BME280_Cal_par.T3)) >> 14;
+	temp_int = var1 + var2;
+	temp = (var1 +var2) / 5120.0;
+	//printf("Temp = %.3f, %.3f *C\n\r", temper, temp);
+	return temp;
 }
 

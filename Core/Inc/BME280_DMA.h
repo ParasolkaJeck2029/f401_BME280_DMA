@@ -139,6 +139,10 @@ void BME280_ReadPressureRAW(int32_t * result);
 void BME280_ReadTemperatureRAW(int32_t * result);
 void BME280_ReadHumidityRAW(int16_t * result);
 
+float BME280_GetTemperature();
+float BME280_GetPressure();
+float BME280_GetHumidity();
+
 void BME280_ReadCalibration();
 
 void BME280_Init();

@@ -121,6 +121,10 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  float t;
+	  t = BME280_GetTemperature();
+	  printf("Temp: %.2f\r\n", t);
+	  HAL_Delay(100);
   }
   /* USER CODE END 3 */
 }
