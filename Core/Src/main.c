@@ -121,9 +121,11 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  float t;
+	  float t, p, h;
 	  t = BME280_GetTemperature();
-	  printf("Temp: %.2f\r\n", t);
+	  p = BME280_GetPressure();
+	  h = BME280_GetHumidity();
+	  printf("Temp: %.2f\r\nPress: %.2f\r\nHum: %.2f %%\r\n", t, p/1000.0f, h);
 	  HAL_Delay(100);
   }
   /* USER CODE END 3 */

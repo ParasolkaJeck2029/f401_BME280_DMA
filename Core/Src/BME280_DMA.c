@@ -50,6 +50,8 @@ void BME280_ReadReg(uint16_t Reg, uint8_t *result){
 //==========Reading of diferent registers in BME280===========
 void BME280_ReadReg_S16(uint8_t Reg, int16_t *Value){
 	I2Cx_ReadData16_DMA(BME280_ADDR,Reg, (uint16_t*) Value);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx)!= HAL_DMA_STATE_READY);
+
 }
 void BME280_ReadReg_S24(uint8_t Reg, int32_t *Value){
 	I2Cx_ReadData24_DMA(BME280_ADDR,Reg, (uint32_t*) Value);
@@ -66,6 +68,8 @@ void BME280_ReadReg_U24(uint8_t Reg, uint32_t *Value){
 void BME280_ReadReg_BE_U24(uint8_t Reg, uint32_t *Value)
 {
   I2Cx_ReadData24_DMA(BME280_ADDR,Reg,Value);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx)!= HAL_DMA_STATE_READY);
+
   *(uint32_t *) Value = be24toword(*(uint32_t *) Value) & 0x00FFFFFF;
 }
 void BME280_WriteReg(uint16_t Reg, uint8_t * value){
@@ -246,3 +250,51 @@ float BME280_GetTemperature(){
 	return temp;
 }
 
+float BME280_GetPressure(){
+	uint32_t pres_int, pres_raw;
+	int64_t p;
+	int64_t var1, var2;
+	float pres;
+	BME280_GetTemperature();
+	BME280_ReadReg_BE_U24(REG_PRESS, &pres_raw);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	pres_raw = pres_raw>>4;
+
+	var1 = ((int64_t) temp_int) - 128000;
+	var2 = var1 * var1 * (int64_t)BME280_Cal_par.P6;
+	var2 = var2 + ((var1 * (int64_t)BME280_Cal_par.P5) << 17);
+	var2 = var2 + ((int64_t)BME280_Cal_par.P4 << 35);
+	var1 = ((var1 * var1 * (int64_t)BME280_Cal_par.P3) >> 8) + ((var1 * (int64_t)BME280_Cal_par.P2) << 12);
+	var1 = (((((int64_t)1) << 47) + var1)) * ((int64_t)BME280_Cal_par.P1) >> 33;
+	if (var1 == 0) {
+	  return 0; // avoid exception caused by division by zero
+	}
+	p = 1048576 - pres_raw;
+	p = (((p << 31) - var2) * 3125) / var1;
+	var1 = (((int64_t)BME280_Cal_par.P9) * (p >> 13) * (p >> 13)) >> 25;
+	var2 = (((int64_t)BME280_Cal_par.P8) * p) >> 19;
+	p = ((p + var1 + var2) >> 8) + ((int64_t)BME280_Cal_par.P7 << 4);
+	pres_int = ((p >> 8) * 1000) + (((p & 0xff) * 390625) / 100000);
+	pres = pres_int / 100.0f;
+	return pres;
+}
+
+float BME280_GetHumidity(){
+	int32_t v_x1_u32r;
+	int32_t adc_H;
+	float hum_float;
+	BME280_ReadHumidityRAW(&adc_H);
+	v_x1_u32r = (temp_int - ((int32_t)76800));
+	v_x1_u32r = (((((adc_H << 14) - (((int32_t)BME280_Cal_par.H4) << 20) -
+				(((int32_t)BME280_Cal_par.H5) * v_x1_u32r)) + ((int32_t)16384)) >> 15) *
+				(((((((v_x1_u32r * ((int32_t)BME280_Cal_par.H6)) >> 10) *
+				(((v_x1_u32r * ((int32_t)BME280_Cal_par.H3)) >> 11) + ((int32_t)32768))) >> 10) +
+				((int32_t)2097152)) * ((int32_t)BME280_Cal_par.H2) + 8192) >> 14));
+	v_x1_u32r = (v_x1_u32r - (((((v_x1_u32r >> 15) * (v_x1_u32r >> 15)) >> 7) *
+				((int32_t)BME280_Cal_par.H1)) >> 4));
+	v_x1_u32r = (v_x1_u32r < 0) ? 0 : v_x1_u32r;
+	v_x1_u32r = (v_x1_u32r > 419430400) ? 419430400 : v_x1_u32r;
+	hum_float = (v_x1_u32r>>12);
+	hum_float /= 1024.0f;
+	return hum_float;
+}
