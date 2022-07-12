@@ -60,6 +60,7 @@ void BME280_ReadReg_U16(uint8_t Reg, uint16_t *Value){
 }
 void BME280_ReadReg_U24(uint8_t Reg, uint32_t *Value){
 	I2Cx_ReadData24_DMA(BME280_ADDR,Reg,  Value);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx)!= HAL_DMA_STATE_READY);
 	*(uint32_t *) Value &= 0x00FFFFFF;
 }
 void BME280_ReadReg_BE_U24(uint8_t Reg, uint32_t *Value)
@@ -87,7 +88,7 @@ void BME280_Init(){
 	}
 	BME280_ReadCalibration();
 	BME280_SetOversampling(BME280_OVERSAMPLING_X4, BME280_OVERSAMPLING_X4, BME280_OVERSAMPLING_X4, BME280_MODE_NORMAL);
-	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	while(HAL_DMA_GetState(&hdma_i2c1_tx) != HAL_DMA_STATE_READY);
 	uint8_t status;
 	BME280_GetStatus(&status);
 	sprintf(uart_string, "Init ok\r\nID: 0x%x\r\nStatus: 0x%x\r\n", id, status);
@@ -97,10 +98,14 @@ void BME280_Init(){
 void BME280_GetId(uint8_t * id){
 	BME280_ReadReg(REG_ID, id);
 }
+
 void BME280_GetStatus(uint8_t *result)
-{
-	//Reading status of sensor, see #define STATUS...
+{	//Reading status of sensor, see #define STATUS...
 	BME280_ReadReg(REG_STATUS, result);
+}
+void BME280_SoftReset(){
+	//SoftReset the sensor
+	BME280_WriteReg(REG_RES, RESET_VALUE);
 }
 void BME280_SetOversampling(uint8_t oversampling_temp, uint8_t oversampling_pres, uint8_t oversampling_hum, uint8_t mode){
 	switch(oversampling_temp){
@@ -136,9 +141,31 @@ void BME280_SetOversampling(uint8_t oversampling_temp, uint8_t oversampling_pres
 	BME280_WriteReg(REG_CTRL_HUM, &oversampling_hum);
 	uint8_t reg_cntl_meas_value;
 	reg_cntl_meas_value = ((oversampling_temp)<<5)|((oversampling_pres)<<2)|(mode);
+	while(HAL_DMA_GetState(&hdma_i2c1_tx) != HAL_DMA_STATE_READY);
 	BME280_WriteReg(REG_CTRL_MEAS, &reg_cntl_meas_value);
+	while(HAL_DMA_GetState(&hdma_i2c1_tx) != HAL_DMA_STATE_READY);
+
 }
 
+void BME280_GetOversamplingMode(uint8_t *array){
+	//write array oversampling temperature, pressure, humidity, and mode
+	uint8_t ovrs_hum, ovrs_temp, ovrs_pres, mode;
+	uint8_t value_ctrl_meas;
+	BME280_ReadReg(REG_CTRL_MEAS, &value_ctrl_meas);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	ovrs_temp = (value_ctrl_meas&0b11100000)>>5;
+	ovrs_pres = (value_ctrl_meas&0b00011100)>>2;
+	mode = value_ctrl_meas&0b00000011;
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	BME280_ReadReg(REG_CTRL_HUM, &ovrs_hum);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	*array = ovrs_temp;
+	*(array + sizeof(uint8_t)) = ovrs_pres;
+	*(array + 2 * sizeof(uint8_t)) = ovrs_hum;
+	*(array + 3 * sizeof(uint8_t)) = mode;
+	sprintf(uart_string,"temp: %d\r\npres: %d\r\nhum: %d\r\nmode: %d\r\n", ovrs_temp, ovrs_pres, ovrs_hum, mode);
+	HAL_UART_Transmit_DMA(&huart1, uart_string, strlen(uart_string));
+}
 void BME280_ReadHumidityRAW(int16_t * result){
 	BME280_ReadReg_S16(REG_HUM, result);
 	*result = be16toword(*result);
@@ -199,3 +226,4 @@ void BME280_ReadCalibration(){
 	HAL_UART_Transmit_DMA(&huart1, uart_string, strlen(uart_string));
 */
 }
+

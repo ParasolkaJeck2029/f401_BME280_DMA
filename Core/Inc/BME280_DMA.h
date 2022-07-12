@@ -133,6 +133,7 @@ void Error();
 
 void BME280_GetId(uint8_t * id);
 void BME280_GetStatus(uint8_t *result);
+void BME280_SoftReset();
 
 void BME280_ReadPressureRAW(int32_t * result);
 void BME280_ReadTemperatureRAW(int32_t * result);
@@ -142,4 +143,6 @@ void BME280_ReadCalibration();
 
 void BME280_Init();
 void BME280_SetOversampling(uint8_t oversampling_temp, uint8_t oversampling_pres, uint8_t oversampling_hum, uint8_t mode);
+void BME280_GetOversamplingMode(uint8_t *array);
+
 #endif /* INC_BME280_DMA_H_ */

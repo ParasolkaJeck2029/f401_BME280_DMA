@@ -109,8 +109,13 @@ int main(void)
 
   BME280_Init();
   HAL_Delay(10);
-  sprintf(uart_string, "Temperature calibration\r\n T1: %d\r\nT2: %d\r\nT3: %d\r\n\r\n", BME280_Cal_par.T1, BME280_Cal_par.T2, BME280_Cal_par.T3);
-  HAL_UART_Transmit(&huart1, uart_string, strlen(uart_string), 100);
+  //sprintf(uart_string, "Temperature calibration\r\n T1: %d\r\nT2: %d\r\nT3: %d\r\n\r\n", BME280_Cal_par.T1, BME280_Cal_par.T2, BME280_Cal_par.T3);
+  //HAL_UART_Transmit_DMA(&huart1, uart_string, strlen(uart_string));
+  uint8_t oversampl_and_mode[4];
+  BME280_GetOversamplingMode(oversampl_and_mode);
+  while(HAL_DMA_GetState(&hdma_usart1_tx) != HAL_DMA_STATE_READY);
+  sprintf(uart_string, "Oversampling and mode\r\n T: %d\r\nP: %d\r\nH: %d\r\nM: %d\r\n\r\n",oversampl_and_mode[0], oversampl_and_mode[1], oversampl_and_mode[2],oversampl_and_mode[3]);
+  HAL_UART_Transmit_DMA(&huart1, uart_string, strlen(uart_string));
   while (1)
   {
     /* USER CODE END WHILE */
