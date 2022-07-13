@@ -178,9 +178,9 @@ void BME280_SetOversamplingHum(uint8_t oversampling_hum){
 	}
 	uint8_t reg_meas;
 	BME280_ReadReg(REG_CTRL_MEAS, &reg_meas);
-	HAL_Delay(10);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
 	BME280_WriteReg(REG_CTRL_HUM, &oversampling_hum);
-	HAL_Delay(10);
+	while(HAL_DMA_GetState(&hdma_i2c1_tx) != HAL_DMA_STATE_READY);
 	BME280_WriteReg(REG_CTRL_MEAS, &reg_meas);
 }
 
@@ -196,7 +196,7 @@ void BME280_SetOversamplingTemp(uint8_t oversampling_temp){
 	//printf("new_reg: %d\r\n", new_reg);
 	new_reg = new_reg | (oversampling_temp<<5);
 	//printf("new_reg: %d\r\n", new_reg);
-	BME280_WriteReg(REG_CTRL_MEAS, new_reg);
+	BME280_WriteReg(REG_CTRL_MEAS, &new_reg);
 	while(HAL_DMA_GetState(&hdma_i2c1_tx) != HAL_DMA_STATE_READY);
 
 }
@@ -212,7 +212,7 @@ void BME280_SetOversamplingPress(uint8_t oversampling_pres){
 	new_reg = new_reg | (oversampling_pres<<2);
 	//printf("new_reg: %d\r\n", new_reg);
 	HAL_Delay(10);
-	BME280_WriteReg(REG_CTRL_MEAS, new_reg);
+	BME280_WriteReg(REG_CTRL_MEAS, &new_reg);
 }
 void BME280_SetMode(uint8_t mode){
 	if(mode != BME280_MODE_SLEEP && mode != BME280_MODE_FORCED && mode != BME280_MODE_NORMAL){
@@ -226,7 +226,7 @@ void BME280_SetMode(uint8_t mode){
 	new_reg = new_reg | mode;
 	//printf("new_reg: %d\r\n", new_reg);
 	HAL_Delay(10);
-	BME280_WriteReg(REG_CTRL_MEAS, new_reg);
+	BME280_WriteReg(REG_CTRL_MEAS, &new_reg);
 
 }
 
