@@ -171,6 +171,65 @@ void BME280_GetOversamplingMode(uint8_t *array){
 	sprintf(uart_string,"temp: %d\r\npres: %d\r\nhum: %d\r\nmode: %d\r\n", ovrs_temp, ovrs_pres, ovrs_hum, mode);
 	HAL_UART_Transmit_DMA(&huart1, uart_string, strlen(uart_string));
 }
+
+void BME280_SetOversamplingHum(uint8_t oversampling_hum){
+	if (oversampling_hum != BME280_OVERSAMPLING_X1 && oversampling_hum != BME280_OVERSAMPLING_X2 && oversampling_hum != BME280_OVERSAMPLING_X4 && oversampling_hum != BME280_OVERSAMPLING_X4 && oversampling_hum != BME280_OVERSAMPLING_X8 && oversampling_hum != BME280_OVERSAMPLING_X16){
+		return;
+	}
+	uint8_t reg_meas;
+	BME280_ReadReg(REG_CTRL_MEAS, &reg_meas);
+	HAL_Delay(10);
+	BME280_WriteReg(REG_CTRL_HUM, &oversampling_hum);
+	HAL_Delay(10);
+	BME280_WriteReg(REG_CTRL_MEAS, &reg_meas);
+}
+
+void BME280_SetOversamplingTemp(uint8_t oversampling_temp){
+	if (oversampling_temp != BME280_OVERSAMPLING_X1 && oversampling_temp != BME280_OVERSAMPLING_X2 && oversampling_temp != BME280_OVERSAMPLING_X4 && oversampling_temp != BME280_OVERSAMPLING_X4 && oversampling_temp != BME280_OVERSAMPLING_X8 && oversampling_temp != BME280_OVERSAMPLING_X16){
+		return;
+	}
+	uint8_t current_reg, new_reg;
+	BME280_ReadReg(REG_CTRL_MEAS, &current_reg);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx) != HAL_DMA_STATE_READY);
+	//printf("current_reg: %d\r\n", current_reg);
+	new_reg = current_reg & 0b00011111;
+	//printf("new_reg: %d\r\n", new_reg);
+	new_reg = new_reg | (oversampling_temp<<5);
+	//printf("new_reg: %d\r\n", new_reg);
+	BME280_WriteReg(REG_CTRL_MEAS, new_reg);
+	while(HAL_DMA_GetState(&hdma_i2c1_tx) != HAL_DMA_STATE_READY);
+
+}
+void BME280_SetOversamplingPress(uint8_t oversampling_pres){
+	if (oversampling_pres != BME280_OVERSAMPLING_X1 && oversampling_pres != BME280_OVERSAMPLING_X2 && oversampling_pres != BME280_OVERSAMPLING_X4 && oversampling_pres != BME280_OVERSAMPLING_X4 && oversampling_pres != BME280_OVERSAMPLING_X8 && oversampling_pres != BME280_OVERSAMPLING_X16){
+		return;
+	}
+	uint8_t current_reg, new_reg;
+	BME280_ReadReg(REG_CTRL_MEAS, &current_reg);
+	//printf("current_reg: %d\r\n", current_reg);
+	new_reg = current_reg & 0b11100011;
+	//printf("new_reg: %d\r\n", new_reg);
+	new_reg = new_reg | (oversampling_pres<<2);
+	//printf("new_reg: %d\r\n", new_reg);
+	HAL_Delay(10);
+	BME280_WriteReg(REG_CTRL_MEAS, new_reg);
+}
+void BME280_SetMode(uint8_t mode){
+	if(mode != BME280_MODE_SLEEP && mode != BME280_MODE_FORCED && mode != BME280_MODE_NORMAL){
+		return;
+	}
+	uint8_t current_reg, new_reg;
+	BME280_ReadReg(REG_CTRL_MEAS, &current_reg);
+	//printf("current_reg: %d\r\n", current_reg);
+	new_reg = current_reg & 0b11111100;
+	//printf("new_reg: %d\r\n", new_reg);
+	new_reg = new_reg | mode;
+	//printf("new_reg: %d\r\n", new_reg);
+	HAL_Delay(10);
+	BME280_WriteReg(REG_CTRL_MEAS, new_reg);
+
+}
+
 void BME280_ReadHumidityRAW(int16_t * result){
 	BME280_ReadReg_S16(REG_HUM, result);
 	*result = be16toword(*result);
