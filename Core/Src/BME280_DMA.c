@@ -214,12 +214,51 @@ void BME280_SetOversamplingPress(uint8_t oversampling_pres){
 	HAL_Delay(10);
 	BME280_WriteReg(REG_CTRL_MEAS, &new_reg);
 }
+void BME280_SetStandbyTime(uint8_t standby_time){
+	switch (standby_time){
+	case BME280_STANDBY_TIME_05:break;
+	case BME280_STANDBY_TIME_10:break;
+	case BME280_STANDBY_TIME_20:break;
+	case BME280_STANDBY_TIME_62:break;
+	case BME280_STANDBY_TIME_125:break;
+	case BME280_STANDBY_TIME_250:break;
+	case BME280_STANDBY_TIME_500:break;
+	case BME280_STANDBY_TIME_1000:break;
+	default: return;
+	}
+	uint8_t current_reg, new_reg;
+	BME280_ReadReg(REG_CONFIG, &current_reg);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx)!= HAL_DMA_STATE_READY);
+	new_reg = current_reg & 0b00011111;
+	new_reg = new_reg | (standby_time << 5);
+	BME280_WriteReg(REG_CONFIG, new_reg);
+}
+
+void BME280_SetFilter(uint8_t filter_coeficient){
+	switch (filter_coeficient){
+	case BME280_FILTER_OFF:break;
+	case BME280_FILTER_2:break;
+	case BME280_FILTER_4:break;
+	case BME280_FILTER_8:break;
+	case BME280_FILTER_16:break;
+	default: return;
+	}
+	uint8_t current_reg, new_reg;
+	BME280_ReadReg(REG_CONFIG, &current_reg);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx)!= HAL_DMA_STATE_READY);
+	new_reg = current_reg & 0b11100011;
+	new_reg = new_reg | (filter_coeficient << 2);
+	BME280_WriteReg(REG_CONFIG, new_reg);
+	while(HAL_DMA_GetState(&hdma_i2c1_tx)!= HAL_DMA_STATE_READY);
+}
+
 void BME280_SetMode(uint8_t mode){
 	if(mode != BME280_MODE_SLEEP && mode != BME280_MODE_FORCED && mode != BME280_MODE_NORMAL){
 		return;
 	}
 	uint8_t current_reg, new_reg;
 	BME280_ReadReg(REG_CTRL_MEAS, &current_reg);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx)!= HAL_DMA_STATE_READY);
 	//printf("current_reg: %d\r\n", current_reg);
 	new_reg = current_reg & 0b11111100;
 	//printf("new_reg: %d\r\n", new_reg);
@@ -227,7 +266,19 @@ void BME280_SetMode(uint8_t mode){
 	//printf("new_reg: %d\r\n", new_reg);
 	HAL_Delay(10);
 	BME280_WriteReg(REG_CTRL_MEAS, &new_reg);
+	while(HAL_DMA_GetState(&hdma_i2c1_tx)!= HAL_DMA_STATE_READY);
+}
 
+void BME280_SPI_3Wire(uint8_t state){
+	if (state > 0){
+		state = 1;
+	}
+	uint8_t current_reg, new_reg;
+	BME280_ReadReg(REG_CONFIG, &current_reg);
+	while(HAL_DMA_GetState(&hdma_i2c1_rx)!= HAL_DMA_STATE_READY);
+	new_reg = current_reg & 0b11111110;
+	new_reg = new_reg | (state);
+	BME280_WriteReg(REG_CONFIG, new_reg);
 }
 
 void BME280_ReadHumidityRAW(int16_t * result){

@@ -124,7 +124,18 @@ int main(void)
   while(HAL_DMA_GetState(&hdma_usart1_tx) != HAL_DMA_STATE_READY);
   sprintf(uart_string, "Oversampling and mode\r\n T: %d\r\nP: %d\r\nH: %d\r\nM: %d\r\n\r\n",oversampl_and_mode[0], oversampl_and_mode[1], oversampl_and_mode[2],oversampl_and_mode[3]);
   HAL_UART_Transmit_DMA(&huart1, uart_string, strlen(uart_string));
+  /*
+  uint8_t reg_status;
+  BME280_ReadReg(REG_CONFIG, &reg_status);
+  while(HAL_DMA_GetState(&hdma_i2c1_rx)!= HAL_DMA_STATE_READY);
+  printf("reg status: %d\r\n", reg_status);
 
+  BME280_SetFilter(BME280_FILTER_16);
+
+  BME280_ReadReg(REG_CONFIG, &reg_status);
+  while(HAL_DMA_GetState(&hdma_i2c1_rx)!= HAL_DMA_STATE_READY);
+  printf("reg status: %d\r\n", reg_status);
+*/
   while (1)
   {
     /* USER CODE END WHILE */
